@@ -1,0 +1,155 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+@import 'shadcn/tailwind.css';
+
+/* Static brand tokens — regular @theme so Tailwind generates utilities */
+@theme {
+  /* Fonts */
+  --font-display: var(--font-fraunces), 'Georgia', serif;
+  --font-body: var(--font-jakarta), 'system-ui', sans-serif;
+  --font-mono-price: var(--font-dm-mono), 'ui-monospace', monospace;
+  --font-sans: var(--font-jakarta), 'system-ui', sans-serif;
+  --font-serif: var(--font-fraunces), 'Georgia', serif;
+  --font-mono: var(--font-dm-mono), 'ui-monospace', monospace;
+
+  /* Brand maroon scale */
+  --color-brand-50: #fbf0f2;
+  --color-brand-100: #f6dde1;
+  --color-brand-200: #ecbcc5;
+  --color-brand-300: #df93a1;
+  --color-brand-400: #cc5e74;
+  --color-brand-500: #a83048;
+  --color-brand-600: #691626;
+  --color-brand-700: #5a1320;
+  --color-brand-800: #4a1019;
+  --color-brand-900: #3a0c13;
+  --color-brand: #691626;
+
+  /* Accent gold scale */
+  --color-accent-50: #faf5ee;
+  --color-accent-100: #f3e6d4;
+  --color-accent-200: #e6cba8;
+  --color-accent-300: #d9b07d;
+  --color-accent-400: #c99b62;
+  --color-accent-500: #bf8952;
+  --color-accent-600: #a06f3f;
+  --color-accent-700: #805834;
+  --color-accent-800: #60422a;
+  --color-accent-900: #402c1d;
+
+  /* Shimmer animation for skeleton loaders */
+  --animate-shimmer: shimmer 1.5s infinite linear;
+
+  @keyframes shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+}
+
+/* Semantic tokens that reference :root variables */
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+  --radius-3xl: calc(var(--radius) * 2.2);
+}
+
+:root {
+  color-scheme: light;
+  --background: #fcfcf7;
+  --foreground: #2b1418;
+  --card: #ffffff;
+  --card-foreground: #2b1418;
+  --popover: #ffffff;
+  --popover-foreground: #2b1418;
+  --primary: #691626;
+  --primary-foreground: #fcfcf7;
+  --secondary: #f3e6d4;
+  --secondary-foreground: #5a1320;
+  --muted: #f2efe6;
+  --muted-foreground: #6b5d52;
+  --accent: #bf8952;
+  --accent-foreground: #2b1418;
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: #e7e1d4;
+  --input: #e7e1d4;
+  --ring: #bf8952;
+  --radius: 0.75rem;
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground font-body antialiased;
+  }
+  html {
+    @apply bg-background font-body;
+  }
+}
+
+@layer utilities {
+  /* Hide scrollbar — used by horizontal sort chip rows */
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Price range dual-thumb slider — used by FilterDrawer */
+input[type='range'].range-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  background: transparent;
+}
+input[type='range'].range-thumb::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #bf8952;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+  pointer-events: all;
+  margin-top: -8px;
+}
+input[type='range'].range-thumb::-webkit-slider-runnable-track {
+  height: 2px;
+  background: transparent;
+}
+input[type='range'].range-thumb::-moz-range-thumb {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: #bf8952;
+  border: 2px solid white;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  cursor: pointer;
+}

@@ -1,0 +1,16 @@
+{
+  "name": "Maitri & Co. — Gourmet Provisions",
+  "short_name": "Maitri & Co.",
+  "description": "Premium artisan food and gourmet provisions, delivered with care.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#fcfcf7",
+  "theme_color": "#691626",
+  "icons": [
+    {
+      "src": "/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml"
+    }
+  ]
+}

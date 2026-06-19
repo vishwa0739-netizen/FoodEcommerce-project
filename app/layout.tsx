@@ -4,6 +4,8 @@ import { Fraunces, Plus_Jakarta_Sans, DM_Mono } from 'next/font/google'
 import { Navbar } from '@/components/layout/navbar'
 import { Footer } from '@/components/layout/footer'
 import { BottomTabBar } from '@/components/layout/bottom-tab-bar'
+import { CartProvider } from '@/components/cart/CartContext'
+import { CartDrawer } from '@/components/cart/CartDrawer'
 import './globals.css'
 
 const fraunces = Fraunces({
@@ -57,12 +59,15 @@ export default function RootLayout({
       className={`${fraunces.variable} ${jakarta.variable} ${dmMono.variable} bg-background`}
     >
       <body className="font-body antialiased">
-        <div className="flex min-h-dvh flex-col">
-          <Navbar />
-          <main className="flex-1 pb-20 md:pb-0">{children}</main>
-          <Footer />
-        </div>
-        <BottomTabBar />
+        <CartProvider>
+          <div className="flex min-h-dvh flex-col">
+            <Navbar />
+            <main className="flex-1 pb-20 md:pb-0">{children}</main>
+            <Footer />
+          </div>
+          <BottomTabBar />
+          <CartDrawer />
+        </CartProvider>
         {process.env.NODE_ENV === 'production' && <Analytics />}
       </body>
     </html>

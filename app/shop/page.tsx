@@ -1,18 +1,30 @@
 // ─────────────────────────────────────────────
-//  CraftNest — /shop/[category]/page.tsx
-//  Dynamic category route
+//  CraftNest — /shop/page.tsx
+//  Single static product listing page.
+//  Category switching happens client-side via
+//  the FilterDrawer/category chips — no dynamic
+//  routing, no separate URLs per category.
 // ─────────────────────────────────────────────
 
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
-import ProductListingPage from '@/app/(shop)/components/ProductListingPage';
-import type { CategoryMeta } from '@/app/(shop)/types';
+import ProductListingPage from "@/app/(shop)/components/ProductListingPage";
+import type { CategoryMeta } from "@/app/(shop)/types";
 
-// ── Static category registry (or fetch from Supabase) ─
-const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
+export const metadata: Metadata = {
+  title: "Shop All — Maitri & Co.",
+  description:
+    "Browse our full range of artisan & gourmet goods — oils, honey, chocolate, spices, coffee, and tea.",
+};
+
+// ── Category metadata registry ────────────────
+// Kept here (not as separate routes) so the same
+// data can drive category titles/descriptions if
+// you later want the page heading to update when
+// a category chip is clicked client-side.
+export const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
   all: {
     slug: "all",
-    title: "All Products",
+    title: "Shop All",
     description: "Browse our full range of artisan & gourmet goods.",
     productCount: 120,
   },
@@ -54,33 +66,10 @@ const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
   },
 };
 
-// ── generateStaticParams (for static export / ISR) ─
-export function generateStaticParams() {
-  return Object.keys(CATEGORY_REGISTRY).map((slug) => ({ category: slug }));
-}
-
-// ── generateMetadata ──────────────────────────
-export async function generateMetadata({
-  params,
-}: {
-  params: { category: string };
-}): Promise<Metadata> {
-  const cat = CATEGORY_REGISTRY[params.category];
-  if (!cat) return {};
-  return {
-    title: `${cat.title} — CraftNest`,
-    description: cat.description,
-  };
-}
-
-// ── Page ──────────────────────────────────────
-export default function CategoryPage({
-  params,
-}: {
-  params: { category: string };
-}) {
-  const category = CATEGORY_REGISTRY[params.category];
-  if (!category) notFound();
+export default function ShopPage() {
+  // Defaulting to "all" — ProductListingPage owns category
+  // switching internally via its filter state.
+  const category = CATEGORY_REGISTRY.all;
 
   return <ProductListingPage category={category} />;
 }

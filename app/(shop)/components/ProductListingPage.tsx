@@ -3,11 +3,16 @@
 // ─────────────────────────────────────────────
 //  CraftNest — ProductListingPage
 //  Main assembly: sticky bar, filter sidebar/drawer,
-//  product grid with all states
+//  product grid with all states.
+//
+//  NOTE: there is intentionally NO search bar
+//  rendered here anymore. Search lives only in
+//  the global Navbar, which navigates to
+//  /shop?q=... — that query reaches this page via
+//  the `initialQuery` prop from app/(shop)/page.tsx.
 // ─────────────────────────────────────────────
 
-import { useState, useCallback } from "react";
-import { SearchBar } from "./SearchBar";
+import { useState, useCallback, useEffect } from "react";
 import { FilterDrawer, SORT_OPTIONS } from "./FilterDrawer";
 import { ProductGrid } from "./ProductGrid";
 import {
@@ -50,14 +55,25 @@ function SortChips({
 // ── Main Component ────────────────────────────
 interface ProductListingPageProps {
   category: CategoryMeta;
+  /** Comes from /shop?q=... set by the global Navbar search. */
+  initialQuery?: string;
 }
 
 export default function ProductListingPage({
   category,
+  initialQuery = "",
 }: ProductListingPageProps) {
   const [isFilterOpen, setIsFilterOpen] = useState(false);
-  const [rawSearch, setRawSearch] = useState("");
+  const [rawSearch, setRawSearch] = useState(initialQuery);
   const searchQuery = useDebounce(rawSearch, 320);
+
+  // If the user searches again from the Navbar while already
+  // on /shop, Next will re-render this page with a new
+  // `initialQuery` prop (server component re-runs on navigation).
+  // Sync local state so the grid actually updates.
+  useEffect(() => {
+    setRawSearch(initialQuery);
+  }, [initialQuery]);
 
   const {
     filters,
@@ -71,10 +87,6 @@ export default function ProductListingPage({
   const { products, isLoading, isLoadingMore, hasMore, error, loadMore } =
     useProducts(filters, searchQuery, category.slug);
 
-  const handleSearch = useCallback((q: string) => {
-    setRawSearch(q);
-  }, []);
-
   const handleSortChange = useCallback(
     (v: string) => {
       updatePending("sort", v as typeof filters.sort);
@@ -86,7 +98,7 @@ export default function ProductListingPage({
 
   return (
     <div className="min-h-screen bg-[#FCFCF7]">
-      {/* ── Sticky top bar ──────────────────── */}
+      {/* ── Sticky filter/sort bar ──────────── */}
       <div className="sticky top-0 z-40 bg-[#FCFCF7]/90 backdrop-blur-md border-b border-[#E8E4DC]">
         <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex items-center gap-3 h-14">
@@ -116,16 +128,14 @@ export default function ProductListingPage({
               )}
             </button>
 
-            {/* Sort chips (hidden on desktop — sidebar handles it) */}
-            <div className="lg:hidden flex-1 min-w-0">
+            {/* Sort chips — full width now that the local
+                search bar is gone */}
+            <div className="flex-1 min-w-0">
               <SortChips
                 currentSort={filters.sort}
                 onSortChange={handleSortChange}
               />
             </div>
-
-            {/* Search bar */}
-            <SearchBar onSearch={handleSearch} />
           </div>
         </div>
       </div>
@@ -142,7 +152,12 @@ export default function ProductListingPage({
               {category.description}
             </p>
           )}
-          {category.productCount !== undefined && !isLoading && (
+          {searchQuery && (
+            <p className="text-xs font-['DM_Mono'] text-[#9A8E80] mt-1">
+              Showing results for &ldquo;{searchQuery}&rdquo;
+            </p>
+          )}
+          {category.productCount !== undefined && !isLoading && !searchQuery && (
             <p className="text-xs font-['DM_Mono'] text-[#9A8E80] mt-1">
               {products.length} of {category.productCount} products
             </p>
@@ -161,7 +176,7 @@ export default function ProductListingPage({
 
         {/* ── Two-column layout on desktop ───── */}
         <div className="flex gap-6 items-start">
-          {/* Desktop filter sidebar */}
+          {/* Desktop filter sidebar / mobile drawer */}
           <FilterDrawer
             isOpen={isFilterOpen}
             onClose={() => setIsFilterOpen(false)}
@@ -185,9 +200,6 @@ export default function ProductListingPage({
           </div>
         </div>
       </div>
-
-      {/* ── Mobile filter drawer ─────────────── */}
-      {/* (rendered outside to avoid clipping) */}
     </div>
   );
 }

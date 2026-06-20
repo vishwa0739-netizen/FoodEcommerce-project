@@ -1,5 +1,8 @@
+// components/ui/button.tsx
 import { Button as ButtonPrimitive } from '@base-ui/react/button'
 import { cva, type VariantProps } from 'class-variance-authority'
+import { Loader2 } from 'lucide-react'
+import { forwardRef, type ButtonHTMLAttributes } from 'react'
 
 import { cn } from '@/lib/utils'
 
@@ -55,4 +58,41 @@ function Button({
   )
 }
 
-export { Button, buttonVariants }
+// ──────────────────────────────────────────────────────────────────────
+// AuthButton — wrapper used by the auth/account pages (login, signup,
+// forgot-password, reset-password, profile, AddressCard, AddressFormModal).
+// Adds `isLoading` (spinner + auto-disable) and `fullWidth` (w-full) on
+// top of the base Button above.
+// ──────────────────────────────────────────────────────────────────────
+
+interface AuthButtonProps
+  extends Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'>,
+    VariantProps<typeof buttonVariants> {
+  isLoading?: boolean
+  fullWidth?: boolean
+  children: React.ReactNode
+}
+
+const AuthButton = forwardRef<HTMLButtonElement, AuthButtonProps>(
+  (
+    { isLoading, fullWidth = true, disabled, className, children, variant, size, ...props },
+    ref
+  ) => {
+    return (
+      <Button
+        ref={ref}
+        variant={variant}
+        size={size}
+        disabled={disabled || isLoading}
+        className={cn(fullWidth && 'w-full', 'h-12 text-[15px]', className)}
+        {...props}
+      >
+        {isLoading && <Loader2 className="size-4 animate-spin" />}
+        {children}
+      </Button>
+    )
+  }
+)
+AuthButton.displayName = 'AuthButton'
+
+export { Button, buttonVariants, AuthButton }

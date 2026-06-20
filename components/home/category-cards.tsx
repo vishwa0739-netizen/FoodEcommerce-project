@@ -52,8 +52,14 @@ export function CategoryCards() {
             Shop by category
           </h2>
         </div>
+        {/*
+          FIX: was href="/categories" — that route doesn't exist
+          anywhere in app/, so this 404'd. /shop is the real
+          "browse everything" page, same fix pattern as every
+          other category link in this project.
+        */}
         <Link
-          href="/categories"
+          href="/shop"
           className={cn(
             'inline-flex shrink-0 items-center gap-1 text-sm font-semibold text-brand transition-colors hover:text-accent-700',
             focusRing,

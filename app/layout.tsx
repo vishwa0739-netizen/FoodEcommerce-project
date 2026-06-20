@@ -28,14 +28,14 @@ const dmMono = DM_Mono({
 })
 
 export const metadata: Metadata = {
-  title: 'Maitri & Co. — Premium Artisan Food & Gourmet Provisions',
+  title: 'Suresh Foods — Premium Artisan Food & Gourmet Provisions',
   description:
     'Premium artisan food and gourmet provisions — sourced from named producers, delivered with care.',
   generator: 'v0.app',
   manifest: '/manifest.webmanifest',
   appleWebApp: {
     capable: true,
-    title: 'Maitri & Co.',
+    title: 'Suresh Foods',
     statusBarStyle: 'default',
   },
 }

@@ -14,8 +14,6 @@ function formatPrice(n: number) {
   }).format(n)
 }
 
-// ─── Empty State ──────────────────────────────────────────────────────────────
-
 function EmptyCart({ onClose }: { onClose: () => void }) {
   const router = useRouter()
   return (
@@ -45,8 +43,6 @@ function EmptyCart({ onClose }: { onClose: () => void }) {
   )
 }
 
-// ─── Summary Row ──────────────────────────────────────────────────────────────
-
 function SummaryRow({ label, value, accent }: {
   label: string; value: string; accent?: boolean
 }) {
@@ -64,19 +60,15 @@ function SummaryRow({ label, value, accent }: {
   )
 }
 
-// ─── Main Drawer ──────────────────────────────────────────────────────────────
-
 export function CartDrawer() {
   const { state, summary, closeCart } = useCart()
   const router = useRouter()
 
-  // Lock body scroll when open
   useEffect(() => {
     document.body.style.overflow = state.isOpen ? 'hidden' : ''
     return () => { document.body.style.overflow = '' }
   }, [state.isOpen])
 
-  // Close on Escape key
   useEffect(() => {
     const handler = (e: KeyboardEvent) => { if (e.key === 'Escape') closeCart() }
     document.addEventListener('keydown', handler)
@@ -97,8 +89,8 @@ export function CartDrawer() {
       />
 
       {/*
-        Mobile  → bottom sheet (slides up, rounded top corners)
-        Desktop → right panel  (slides in from right)
+        Mobile (< 768px)        → bottom sheet, slides up
+        Tablet + Desktop (≥768) → right panel, slides in from right
       */}
       <div
         role="dialog"
@@ -110,14 +102,14 @@ export function CartDrawer() {
           bottom-0 left-0 right-0 max-h-[92vh]
           rounded-t-[28px] animate-slideUp
 
-          md:bottom-0 md:top-0 md:left-auto md:right-0
-          md:w-[420px] md:max-h-full md:h-screen
-          md:rounded-none md:rounded-l-[24px]
-          md:animate-slideInRight
+          tablet:bottom-0 tablet:top-0 tablet:left-auto tablet:right-0
+          tablet:w-[420px] tablet:max-h-full tablet:h-screen
+          tablet:rounded-none tablet:rounded-l-[24px]
+          tablet:animate-slideInRight
         "
       >
         {/* Drag handle — mobile only */}
-        <div className="flex justify-center pt-3 pb-1 md:hidden" aria-hidden>
+        <div className="flex justify-center pt-3 pb-1 tablet:hidden" aria-hidden>
           <div className="w-10 h-1 rounded-full bg-[#691626]/20" />
         </div>
 

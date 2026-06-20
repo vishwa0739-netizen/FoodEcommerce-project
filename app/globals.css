@@ -12,6 +12,11 @@
   --font-serif: var(--font-fraunces), 'Georgia', serif;
   --font-mono: var(--font-dm-mono), 'ui-monospace', monospace;
 
+  /* ── NEW: Custom breakpoints matching your exact responsive spec ────── */
+  --breakpoint-tablet: 48rem;   /* 768px  — matches your Tablet breakpoint */
+  --breakpoint-desktop: 90rem;  /* 1440px — matches your Desktop breakpoint */
+  /* ──────────────────────────────────────────────────────────────────── */
+
   /* Brand maroon scale */
   --color-brand-50: #fbf0f2;
   --color-brand-100: #f6dde1;
@@ -45,7 +50,7 @@
     100% { background-position: 200% 0; }
   }
 
-  /* ── NEW: Cart drawer + checkout entrance animations ────────────────── */
+  /* Cart drawer + checkout entrance animations */
   --animate-fadeIn: fadeIn 200ms ease-out;
   --animate-slideUp: slideUp 320ms cubic-bezier(0.32, 0.72, 0, 1);
   --animate-slideInRight: slideInRight 320ms cubic-bezier(0.32, 0.72, 0, 1);
@@ -62,7 +67,6 @@
     from { transform: translateX(100%); }
     to { transform: translateX(0); }
   }
-  /* ──────────────────────────────────────────────────────────────────── */
 }
 
 /* Semantic tokens that reference :root variables */
@@ -139,12 +143,12 @@
     scrollbar-width: none;
   }
 
-  /* ── NEW: Safe area for the cart bottom sheet on notched devices ──── */
+  /* Safe area for the cart bottom sheet on notched devices */
   .safe-area-bottom {
     padding-bottom: max(24px, env(safe-area-inset-bottom));
   }
 
-  /* ── NEW: Skeleton shimmer background — reuses the keyframe above ─── */
+  /* Skeleton shimmer background — reuses the keyframe above */
   .shimmer {
     background: linear-gradient(90deg, var(--muted) 25%, var(--border) 50%, var(--muted) 75%);
     background-size: 200% 100%;

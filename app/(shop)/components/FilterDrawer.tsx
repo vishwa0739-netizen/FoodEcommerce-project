@@ -31,12 +31,14 @@ export const DIETARY_TAGS: DietaryTag[] = [
 
 export const CATEGORIES = [
   { slug: "all", label: "All Products" },
-  { slug: "spices", label: "Spices & Blends" },
   { slug: "oils", label: "Oils & Vinegars" },
+  { slug: "honey", label: "Honey & Preserves" },
+  { slug: "chocolate", label: "Chocolate" },
+  { slug: "spices", label: "Spices & Blends" },
+  { slug: "coffee", label: "Coffee" },
+  { slug: "tea", label: "Loose Leaf Tea" },
   { slug: "sweets", label: "Artisan Sweets" },
   { slug: "snacks", label: "Gourmet Snacks" },
-  { slug: "beverages", label: "Beverages" },
-  { slug: "preserves", label: "Preserves & Jams" },
 ];
 
 const PRICE_MAX = 10000;
@@ -232,16 +234,16 @@ function FilterContent({ pending, onUpdate }: FilterContentProps) {
             In stock only
           </span>
           <div
-            className={`relative w-10 h-5.5 rounded-full transition-colors duration-200 ${
-              pending.inStockOnly ? "bg-[#691626]" : "bg-[#D9D3C7]"
+          className={`relative w-10 h-[22px] rounded-full transition-colors duration-200 ${
+            pending.inStockOnly ? "bg-[#691626]" : "bg-[#D9D3C7]"
             }`}
-          >
+            >
             <div
-              className={`absolute top-0.5 w-4.5 h-4.5 bg-white rounded-full shadow-sm transition-transform duration-200 ${
-                pending.inStockOnly ? "translate-x-5" : "translate-x-0.5"
+              className={`absolute top-[2px] w-[18px] h-[18px] bg-white rounded-full shadow-sm transition-transform duration-200 ${
+                pending.inStockOnly ? "translate-x-[22px]" : "translate-x-[2px]"
               }`}
             />
-          </div>
+            </div>
         </button>
       </section>
     </div>

@@ -1,10 +1,27 @@
 "use client";
 
-import { useState, useRef, useCallback, ReactNode, CSSProperties } from "react";
+// ─────────────────────────────────────────────
+//  CraftNest — Product Detail Page
+//  app/product/[slug]/page.tsx
+//
+//  Rewritten from a standalone component that
+//  injected a raw global <style> tag (universal
+//  `*` reset, `body`, `button`, `img` overrides,
+//  and a `:root` redefinition). That tag was NOT
+//  scoped — it leaked into every other component
+//  mounted on the page (Navbar, Footer), which is
+//  why they visually "collapsed". This version
+//  uses only Tailwind + the app's existing design
+//  tokens (brand/accent/etc. from globals.css),
+//  so nothing here can affect anything outside it.
+// ─────────────────────────────────────────────
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { useState, useRef, useCallback, type ReactNode } from "react";
+import { cn } from "@/lib/utils";
+
+// ─── Types ──────────────────────────────────────
 interface NutritionRow { label: string; value: string; }
-interface Product {
+interface ProductDetail {
   id: string; name: string; shortDesc: string; price: number;
   originalPrice: number | null; rating: number; reviewCount: number;
   badge: string; images: string[]; nutrition: NutritionRow[];
@@ -13,13 +30,14 @@ interface Product {
 interface Review { id: number; name: string; rating: number; date: string; text: string; avatar: string; }
 interface RelatedProduct { id: string; name: string; price: number; originalPrice: number | null; image: string; }
 
-// ─── Dummy data ───────────────────────────────────────────────────────────────
-const PRODUCT: Product = {
+// ─── Dummy data — replace with a real fetch-by-slug ─
+// TODO: swap for Supabase lookup using params.slug.
+const PRODUCT: ProductDetail = {
   id: "saffron-walnut-preserve",
   name: "Saffron & Walnut Artisan Preserve",
   shortDesc:
     "Sun-dried Kashmiri walnuts slow-cooked with hand-picked saffron threads and raw forest honey. No preservatives, no shortcuts — just 72 hours of craft.",
-  price: 1290,
+  price: 1090,
   originalPrice: 1650,
   rating: 4.8,
   reviewCount: 214,
@@ -63,10 +81,10 @@ const RELATED: RelatedProduct[] = [
     image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?w=400&q=80" },
 ];
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
+// ─── Helpers ────────────────────────────────────
 function StarRating({ rating, size = 16 }: { rating: number; size?: number }) {
   return (
-    <span className="star-row" aria-label={`${rating} out of 5 stars`}>
+    <span className="inline-flex items-center gap-0.5" aria-label={`${rating} out of 5 stars`}>
       {[1, 2, 3, 4, 5].map((s) => (
         <svg key={s} width={size} height={size} viewBox="0 0 24 24"
           fill={s <= Math.round(rating) ? "#bf8952" : "none"}
@@ -86,7 +104,7 @@ function pct(orig: number, disc: number): number {
   return Math.round(((orig - disc) / orig) * 100);
 }
 
-// ─── Mobile gallery ───────────────────────────────────────────────────────────
+// ─── Mobile gallery ──────────────────────────────
 function MobileGallery({ images }: { images: string[] }) {
   const [active, setActive] = useState(0);
   const startX = useRef<number | null>(null);
@@ -97,9 +115,9 @@ function MobileGallery({ images }: { images: string[] }) {
   );
 
   return (
-    <div className="mob-gallery" aria-label="Product images">
+    <div className="relative w-full aspect-square overflow-hidden md:hidden" aria-label="Product images">
       <div
-        className="mob-gallery__track"
+        className="flex h-full transition-transform duration-300 ease-out"
         onTouchStart={(e) => { startX.current = e.touches[0].clientX; }}
         onTouchEnd={(e) => {
           if (startX.current === null) return;
@@ -110,21 +128,25 @@ function MobileGallery({ images }: { images: string[] }) {
       >
         {images.map((src, i) => (
           <img key={i} src={src} alt={`Product view ${i + 1}`}
-            className="mob-gallery__img" loading={i === 0 ? "eager" : "lazy"} />
+            className="h-full w-full flex-none object-cover" loading={i === 0 ? "eager" : "lazy"} />
         ))}
       </div>
-      <div className="mob-gallery__dots" aria-hidden="true">
+      <div className="absolute bottom-3.5 left-1/2 flex -translate-x-1/2 gap-1.5" aria-hidden="true">
         {images.map((_, i) => (
           <button key={i}
-            className={`mob-gallery__dot${i === active ? " mob-gallery__dot--active" : ""}`}
-            onClick={() => setActive(i)} />
+            onClick={() => setActive(i)}
+            className={cn(
+              "h-1.5 rounded-full bg-white/55 transition-all",
+              i === active ? "w-5 bg-white" : "w-1.5",
+            )}
+          />
         ))}
       </div>
     </div>
   );
 }
 
-// ─── Desktop gallery ──────────────────────────────────────────────────────────
+// ─── Desktop gallery ─────────────────────────────
 function DesktopGallery({ images }: { images: string[] }) {
   const [active, setActive] = useState(0);
   const [zoom, setZoom] = useState(false);
@@ -140,92 +162,118 @@ function DesktopGallery({ images }: { images: string[] }) {
     });
   };
 
-  // CSS custom properties for zoom — cast to allow unknown CSS vars
-  const zoomStyle = zoom
-    ? ({ "--zx": `${zoomPos.x}%`, "--zy": `${zoomPos.y}%` } as CSSProperties)
-    : undefined;
-
   return (
-    <div className="desk-gallery">
-      <div className="desk-gallery__thumbs">
+    <div className="hidden gap-3 items-start sticky top-24 md:flex">
+      <div className="flex w-20 shrink-0 flex-col gap-2">
         {images.map((src, i) => (
           <button key={i}
-            className={`desk-gallery__thumb${i === active ? " desk-gallery__thumb--active" : ""}`}
-            onClick={() => setActive(i)} aria-label={`View image ${i + 1}`}>
-            <img src={src} alt="" loading="lazy" />
+            onClick={() => setActive(i)} aria-label={`View image ${i + 1}`}
+            className={cn(
+              "h-20 w-20 overflow-hidden rounded-md border-2 transition-colors",
+              i === active ? "border-accent" : "border-transparent hover:border-accent/50",
+            )}
+          >
+            <img src={src} alt="" loading="lazy" className="h-full w-full object-cover" />
           </button>
         ))}
       </div>
       <div
-        className={`desk-gallery__main${zoom ? " desk-gallery__main--zoom" : ""}`}
+        className="relative flex-1 overflow-hidden rounded-2xl cursor-zoom-in"
         onMouseEnter={() => setZoom(true)}
         onMouseLeave={() => setZoom(false)}
         onMouseMove={handleMouseMove}
-        style={zoomStyle}
         aria-label="Hover to zoom"
       >
-        <img ref={imgRef} src={images[active]} alt="Product main view" className="desk-gallery__main-img" />
+        <img
+          ref={imgRef}
+          src={images[active]}
+          alt="Product main view"
+          className={cn("aspect-square w-full object-cover transition-opacity", zoom && "opacity-0")}
+        />
         {zoom && (
-          <div className="desk-gallery__zoom-overlay"
-            style={{ backgroundImage: `url(${images[active]})`, backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%` }} />
+          <div
+            className="absolute inset-0"
+            style={{
+              backgroundImage: `url(${images[active]})`,
+              backgroundSize: "200%",
+              backgroundRepeat: "no-repeat",
+              backgroundPosition: `${zoomPos.x}% ${zoomPos.y}%`,
+            }}
+          />
         )}
       </div>
     </div>
   );
 }
 
-// ─── Accordion ────────────────────────────────────────────────────────────────
+// ─── Accordion ───────────────────────────────────
 function Accordion({ title, children }: { title: string; children: ReactNode }) {
   const [open, setOpen] = useState(false);
   return (
-    <div className="accordion">
-      <button className="accordion__trigger" onClick={() => setOpen((p) => !p)} aria-expanded={open}>
+    <div className="border-t border-border last:border-b">
+      <button
+        onClick={() => setOpen((p) => !p)}
+        aria-expanded={open}
+        className="flex w-full items-center justify-between py-4 text-left text-sm font-semibold text-foreground"
+      >
         <span>{title}</span>
-        <svg className={`accordion__chevron${open ? " accordion__chevron--open" : ""}`}
-          width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true">
+        <svg
+          className={cn("h-[18px] w-[18px] text-muted-foreground transition-transform", open && "rotate-180")}
+          viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" aria-hidden="true"
+        >
           <polyline points="6 9 12 15 18 9" />
         </svg>
       </button>
-      {open && <div className="accordion__body">{children}</div>}
+      {open && <div className="pb-4 text-[13px] leading-relaxed text-muted-foreground">{children}</div>}
     </div>
   );
 }
 
-// ─── Quantity stepper ─────────────────────────────────────────────────────────
+// ─── Quantity stepper ────────────────────────────
 function QuantityStepper({ qty, setQty }: { qty: number; setQty: React.Dispatch<React.SetStateAction<number>> }) {
   return (
-    <div className="stepper" role="group" aria-label="Quantity">
-      <button className="stepper__btn" onClick={() => setQty((q) => Math.max(1, q - 1))}
-        aria-label="Decrease quantity" disabled={qty <= 1}>−</button>
-      <span className="stepper__val" aria-live="polite">{qty}</span>
-      <button className="stepper__btn" onClick={() => setQty((q) => Math.min(12, q + 1))}
-        aria-label="Increase quantity" disabled={qty >= 12}>+</button>
+    <div className="inline-flex h-11 items-center overflow-hidden rounded-lg border border-border" role="group" aria-label="Quantity">
+      <button
+        className="flex h-full w-11 shrink-0 items-center justify-center text-lg text-foreground transition-colors hover:bg-accent/10 disabled:opacity-35"
+        onClick={() => setQty((q) => Math.max(1, q - 1))} aria-label="Decrease quantity" disabled={qty <= 1}
+      >−</button>
+      <span className="flex h-full w-12 items-center justify-center border-x border-border font-mono-price text-base font-medium" aria-live="polite">
+        {qty}
+      </span>
+      <button
+        className="flex h-full w-11 shrink-0 items-center justify-center text-lg text-foreground transition-colors hover:bg-accent/10 disabled:opacity-35"
+        onClick={() => setQty((q) => Math.min(12, q + 1))} aria-label="Increase quantity" disabled={qty >= 12}
+      >+</button>
     </div>
   );
 }
 
-// ─── Wishlist button ──────────────────────────────────────────────────────────
+// ─── Wishlist button ─────────────────────────────
 function WishlistButton({ size = "md" }: { size?: "sm" | "md" }) {
   const [wished, setWished] = useState(false);
   const iconSize = size === "sm" ? 18 : 22;
   return (
     <button
-      className={`wishlist-btn wishlist-btn--${size}${wished ? " wishlist-btn--active" : ""}`}
       onClick={() => setWished((p) => !p)}
-      aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}>
+      aria-label={wished ? "Remove from wishlist" : "Add to wishlist"}
+      className={cn(
+        "flex h-11 w-11 shrink-0 items-center justify-center rounded-lg border transition-all",
+        wished ? "border-brand scale-105" : "border-border text-muted-foreground hover:border-brand hover:text-brand",
+      )}
+    >
       <svg width={iconSize} height={iconSize} viewBox="0 0 24 24"
         fill={wished ? "#691626" : "none"} stroke={wished ? "#691626" : "currentColor"}
-        strokeWidth="1.8" className="wishlist-btn__icon" aria-hidden="true">
+        strokeWidth="1.8" aria-hidden="true">
         <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
       </svg>
     </button>
   );
 }
 
-// ─── Add to Cart ──────────────────────────────────────────────────────────────
+// ─── Add to Cart ─────────────────────────────────
 type ATCState = "idle" | "loading" | "added";
 
-function AddToCartBtn({ qty, variant = "inline" }: { qty: number; variant?: "inline" | "sticky" }) {
+function AddToCartBtn({ variant = "inline" }: { variant?: "inline" | "sticky" }) {
   const [state, setState] = useState<ATCState>("idle");
   const handleClick = () => {
     setState("loading");
@@ -233,8 +281,15 @@ function AddToCartBtn({ qty, variant = "inline" }: { qty: number; variant?: "inl
   };
   return (
     <button
-      className={`atc-btn atc-btn--${variant} atc-btn--${state}`}
-      onClick={handleClick} disabled={state !== "idle"} aria-live="polite">
+      onClick={handleClick} disabled={state !== "idle"} aria-live="polite"
+      className={cn(
+        "h-14 rounded-lg text-[15px] font-semibold tracking-wide transition-colors active:scale-[.98]",
+        variant === "inline" ? "hidden w-full md:flex md:items-center md:justify-center" : "flex w-full items-center justify-center",
+        state === "idle" && "bg-brand text-primary-foreground hover:bg-brand-700",
+        state === "loading" && "bg-brand text-primary-foreground/70",
+        state === "added" && "bg-emerald-600 text-white",
+      )}
+    >
       {state === "idle" && `Add to cart — ${fmt(PRODUCT.price)}`}
       {state === "loading" && "Adding…"}
       {state === "added" && "✓ Added to cart"}
@@ -242,303 +297,159 @@ function AddToCartBtn({ qty, variant = "inline" }: { qty: number; variant?: "inl
   );
 }
 
-// ─── Review card ──────────────────────────────────────────────────────────────
+// ─── Review card ─────────────────────────────────
 function ReviewCard({ review }: { review: Review }) {
   return (
-    <div className="review-card">
-      <div className="review-card__header">
-        <div className="review-card__avatar">{review.avatar}</div>
-        <div>
-          <p className="review-card__name">{review.name}</p>
-          <p className="review-card__date">{review.date}</p>
+    <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+      <div className="mb-2.5 flex items-center gap-2.5">
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent/15 font-mono-price text-xs font-medium text-accent-700">
+          {review.avatar}
         </div>
-        <div className="review-card__stars"><StarRating rating={review.rating} size={14} /></div>
+        <div>
+          <p className="text-sm font-semibold leading-tight">{review.name}</p>
+          <p className="text-xs text-muted-foreground">{review.date}</p>
+        </div>
+        <div className="ml-auto"><StarRating rating={review.rating} size={14} /></div>
       </div>
-      <p className="review-card__text">{review.text}</p>
+      <p className="text-[13px] leading-relaxed text-muted-foreground">{review.text}</p>
     </div>
   );
 }
 
-// ─── Related card ─────────────────────────────────────────────────────────────
+// ─── Related card ────────────────────────────────
 function RelatedCard({ product }: { product: RelatedProduct }) {
   return (
-    <div className="related-card">
-      <div className="related-card__img-wrap">
-        <img src={product.image} alt={product.name} className="related-card__img" loading="lazy" />
+    <div className="flex-none w-40 sm:w-48 overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+      <div className="aspect-square overflow-hidden">
+        <img src={product.image} alt={product.name} loading="lazy"
+          className="h-full w-full object-cover transition-transform duration-300 hover:scale-105" />
       </div>
-      <div className="related-card__info">
-        <p className="related-card__name">{product.name}</p>
-        <div className="related-card__price-row">
-          <span className="price-disc">{fmt(product.price)}</span>
-          {product.originalPrice && <span className="price-orig">{fmt(product.originalPrice)}</span>}
+      <div className="p-2.5">
+        <p className="mb-1.5 line-clamp-2 text-xs font-semibold leading-snug text-foreground">{product.name}</p>
+        <div className="flex items-center gap-1.5">
+          <span className="font-mono-price text-sm text-brand">{fmt(product.price)}</span>
+          {product.originalPrice && (
+            <span className="font-mono-price text-[11px] text-muted-foreground line-through">{fmt(product.originalPrice)}</span>
+          )}
         </div>
       </div>
     </div>
   );
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
+// ─── Page ────────────────────────────────────────
 export default function ProductDetailPage() {
   const [qty, setQty] = useState(1);
 
   return (
-    <>
-      <style>{`
-        @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,wght@0,400;0,600;0,700;1,400&family=Plus+Jakarta+Sans:wght@400;500;600&family=DM+Mono:wght@400;500&display=swap');
-        :root {
-          --cream: #FCFCF7; --maroon: #691626; --maroon-hover: #521120;
-          --gold: #bf8952; --gold-light: #f5e8d6;
-          --text-primary: #1a1108; --text-secondary: #5c4a38; --text-muted: #9b8978;
-          --border: #e8e0d5; --border-strong: #c8bfb4;
-          --radius-sm: 6px; --radius-md: 10px; --radius-lg: 16px;
-          --font-display: 'Fraunces', Georgia, serif;
-          --font-body: 'Plus Jakarta Sans', system-ui, sans-serif;
-          --font-mono: 'DM Mono', 'Courier New', monospace;
-          --shadow-card: 0 1px 4px rgba(26,17,8,.06), 0 4px 16px rgba(26,17,8,.04);
-        }
-        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-        body { background: var(--cream); font-family: var(--font-body); color: var(--text-primary); font-size: 15px; line-height: 1.6; -webkit-font-smoothing: antialiased; }
-        button { cursor: pointer; border: none; background: none; font-family: inherit; }
-        img { display: block; width: 100%; object-fit: cover; }
+    <div className="max-w-[1440px] mx-auto pb-24 md:pb-0">
+      <nav className="flex items-center gap-1.5 px-4 pt-4 text-xs text-muted-foreground md:px-12 md:pt-6 lg:px-20" aria-label="Breadcrumb">
+        <a href="/" className="hover:text-brand">Home</a><span>›</span>
+        <a href="/shop?category=honey-preserves" className="hover:text-brand">Preserves</a><span>›</span>
+        <span aria-current="page" className="text-foreground">Saffron &amp; Walnut</span>
+      </nav>
 
-        .pdp { max-width: 1440px; margin: 0 auto; padding-bottom: 96px; }
-        .pdp__mobile-only { display: block; }
-        .wishlist-desktop { display: none; }
-        .wishlist-mobile { display: block; }
+      <MobileGallery images={PRODUCT.images} />
 
-        .breadcrumb { display: flex; align-items: center; gap: 6px; padding: 16px 16px 0; font-size: 12px; color: var(--text-muted); }
-        .breadcrumb a { color: var(--text-muted); text-decoration: none; }
-        .breadcrumb a:hover { color: var(--maroon); }
-
-        .badge { display: inline-block; background: var(--gold-light); color: #7a4f1a; font-family: var(--font-mono); font-size: 11px; font-weight: 500; letter-spacing: .04em; padding: 3px 10px; border-radius: var(--radius-sm); text-transform: uppercase; }
-
-        .mob-gallery { position: relative; width: 100%; aspect-ratio: 1/1; overflow: hidden; }
-        .mob-gallery__track { display: flex; height: 100%; transition: transform .32s cubic-bezier(.4,0,.2,1); }
-        .mob-gallery__img { flex: 0 0 100%; height: 100%; object-fit: cover; }
-        .mob-gallery__dots { position: absolute; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 6px; }
-        .mob-gallery__dot { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,.55); border: none; padding: 0; transition: background .2s, width .2s; }
-        .mob-gallery__dot--active { background: #fff; width: 20px; border-radius: 4px; }
-
-        .desk-gallery { display: none; gap: 12px; align-items: flex-start; position: sticky; top: 24px; }
-        .desk-gallery__thumbs { display: flex; flex-direction: column; gap: 8px; width: 80px; flex-shrink: 0; }
-        .desk-gallery__thumb { width: 80px; height: 80px; border-radius: var(--radius-sm); overflow: hidden; border: 2px solid transparent; transition: border-color .18s; padding: 0; }
-        .desk-gallery__thumb img { height: 100%; object-fit: cover; }
-        .desk-gallery__thumb--active, .desk-gallery__thumb:hover { border-color: var(--gold); }
-        .desk-gallery__main { flex: 1; position: relative; border-radius: var(--radius-lg); overflow: hidden; cursor: zoom-in; }
-        .desk-gallery__main-img { aspect-ratio: 1/1; object-fit: cover; display: block; width: 100%; transition: opacity .15s; }
-        .desk-gallery__main--zoom .desk-gallery__main-img { opacity: 0; }
-        .desk-gallery__zoom-overlay { position: absolute; inset: 0; background-size: 200%; background-repeat: no-repeat; }
-
-        .pdp__info { padding: 24px 16px 0; }
-        .pdp__top-row { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; margin-bottom: 8px; }
-        .pdp__name { font-family: var(--font-display); font-size: 26px; font-weight: 700; line-height: 1.2; color: var(--text-primary); flex: 1; }
-        .pdp__rating-row { display: flex; align-items: center; gap: 6px; margin-bottom: 16px; }
-        .pdp__rating-count { font-size: 13px; color: var(--text-muted); }
-        .star-row { display: flex; gap: 2px; align-items: center; }
-
-        .pdp__price-block { display: flex; align-items: baseline; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
-        .price-disc { font-family: var(--font-mono); font-size: 24px; font-weight: 500; color: var(--maroon); }
-        .price-orig { font-family: var(--font-mono); font-size: 15px; color: var(--text-muted); text-decoration: line-through; }
-        .price-save { font-family: var(--font-mono); font-size: 12px; background: #fde8e8; color: #8b1a1a; padding: 2px 8px; border-radius: var(--radius-sm); }
-
-        .pdp__desc { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin-bottom: 20px; }
-        .pdp__tags { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 24px; }
-        .tag { font-size: 12px; color: var(--text-secondary); border: 1px solid var(--border); padding: 4px 10px; border-radius: 100px; }
-
-        .stepper { display: inline-flex; align-items: center; border: 1px solid var(--border-strong); border-radius: var(--radius-md); overflow: hidden; height: 44px; }
-        .stepper__btn { width: 44px; height: 44px; font-size: 20px; color: var(--text-primary); display: flex; align-items: center; justify-content: center; transition: background .15s; flex-shrink: 0; }
-        .stepper__btn:hover:not(:disabled) { background: var(--gold-light); }
-        .stepper__btn:disabled { opacity: .35; cursor: not-allowed; }
-        .stepper__val { width: 48px; text-align: center; font-family: var(--font-mono); font-size: 16px; font-weight: 500; border-left: 1px solid var(--border); border-right: 1px solid var(--border); height: 100%; display: flex; align-items: center; justify-content: center; }
-
-        .wishlist-btn { width: 44px; height: 44px; border-radius: var(--radius-md); border: 1px solid var(--border-strong); display: flex; align-items: center; justify-content: center; transition: border-color .18s, transform .18s; color: var(--text-secondary); flex-shrink: 0; }
-        .wishlist-btn:hover { border-color: var(--maroon); color: var(--maroon); }
-        .wishlist-btn--active { border-color: var(--maroon); animation: heartPop .35s ease; }
-        @keyframes heartPop { 0% { transform: scale(1); } 40% { transform: scale(1.22); } 70% { transform: scale(.92); } 100% { transform: scale(1); } }
-
-        .pdp__actions-row { display: flex; align-items: center; gap: 12px; margin-bottom: 24px; }
-
-        .atc-btn { width: 100%; height: 56px; border-radius: var(--radius-md); font-family: var(--font-body); font-weight: 600; font-size: 15px; letter-spacing: .02em; transition: background .18s, transform .1s; }
-        .atc-btn--inline { display: none; }
-        .atc-btn--idle { background: var(--maroon); color: #fff; }
-        .atc-btn--idle:hover { background: var(--maroon-hover); }
-        .atc-btn--loading { background: var(--maroon); color: rgba(255,255,255,.7); }
-        .atc-btn--added { background: #3b7a3e; color: #fff; }
-        .atc-btn:active:not(:disabled) { transform: scale(.98); }
-
-        .pdp__sticky-cta { position: fixed; bottom: 0; left: 0; right: 0; padding: 12px 16px 24px; background: linear-gradient(to top, var(--cream) 80%, transparent); z-index: 100; }
-
-        .divider { height: 1px; background: var(--border); margin: 24px 0; }
-
-        .accordion { border-top: 1px solid var(--border); }
-        .accordion:last-of-type { border-bottom: 1px solid var(--border); }
-        .accordion__trigger { display: flex; align-items: center; justify-content: space-between; width: 100%; padding: 16px 0; font-size: 14px; font-weight: 600; color: var(--text-primary); text-align: left; }
-        .accordion__chevron { transition: transform .2s; color: var(--text-muted); flex-shrink: 0; }
-        .accordion__chevron--open { transform: rotate(180deg); }
-        .accordion__body { padding: 0 0 16px; font-size: 13px; color: var(--text-secondary); line-height: 1.7; }
-        .nutrition-table { width: 100%; border-collapse: collapse; }
-        .nutrition-table td { padding: 6px 0; border-top: 1px solid var(--border); font-size: 13px; }
-        .nutrition-table td:last-child { text-align: right; font-family: var(--font-mono); font-size: 13px; color: var(--text-primary); }
-
-        .reviews__header { display: flex; align-items: baseline; gap: 10px; margin-bottom: 4px; padding: 0 16px; }
-        .reviews__title { font-family: var(--font-display); font-size: 20px; font-weight: 600; }
-        .reviews__avg { font-family: var(--font-mono); font-size: 18px; color: var(--gold); font-weight: 500; }
-        .reviews__count { font-size: 13px; color: var(--text-muted); }
-        .reviews__star-row { padding: 0 16px; margin-bottom: 20px; display: flex; align-items: center; gap: 8px; }
-        .reviews-grid { padding: 0 16px; display: grid; gap: 16px; }
-
-        .review-card { padding: 16px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); box-shadow: var(--shadow-card); }
-        .review-card__header { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
-        .review-card__avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--gold-light); color: #7a4f1a; font-family: var(--font-mono); font-size: 12px; font-weight: 500; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-        .review-card__name { font-size: 14px; font-weight: 600; line-height: 1.2; }
-        .review-card__date { font-size: 12px; color: var(--text-muted); }
-        .review-card__stars { margin-left: auto; }
-        .review-card__text { font-size: 13px; color: var(--text-secondary); line-height: 1.65; }
-
-        .related__title { font-family: var(--font-display); font-size: 20px; font-weight: 600; padding: 0 16px; margin-bottom: 16px; }
-        .related__scroll { display: flex; gap: 12px; overflow-x: auto; padding: 0 16px 8px; scroll-snap-type: x mandatory; -webkit-overflow-scrolling: touch; scrollbar-width: none; }
-        .related__scroll::-webkit-scrollbar { display: none; }
-        .related-card { flex: 0 0 160px; background: #fff; border: 1px solid var(--border); border-radius: var(--radius-lg); overflow: hidden; scroll-snap-align: start; box-shadow: var(--shadow-card); transition: box-shadow .18s; }
-        .related-card:hover { box-shadow: 0 4px 20px rgba(26,17,8,.1); }
-        .related-card__img-wrap { aspect-ratio: 1/1; overflow: hidden; }
-        .related-card__img { transition: transform .3s; }
-        .related-card:hover .related-card__img { transform: scale(1.05); }
-        .related-card__info { padding: 10px; }
-        .related-card__name { font-size: 12px; font-weight: 600; line-height: 1.3; margin-bottom: 6px; color: var(--text-primary); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-        .related-card__price-row { display: flex; align-items: center; gap: 6px; }
-        .related-card__price-row .price-disc { font-size: 14px; }
-        .related-card__price-row .price-orig { font-size: 11px; }
-
-        @media (min-width: 768px) {
-          .mob-gallery { display: none; }
-          .desk-gallery { display: flex; }
-          .pdp__sticky-cta { display: none; }
-          .atc-btn--inline { display: flex; align-items: center; justify-content: center; }
-          .pdp__mobile-only { display: none; }
-          .wishlist-desktop { display: block; }
-          .wishlist-mobile { display: none; }
-          .pdp__layout { display: grid; grid-template-columns: 55% 45%; gap: 0 48px; padding: 32px 48px 64px; align-items: start; }
-          .pdp__info { padding: 0; }
-          .pdp__name { font-size: 32px; }
-          .price-disc { font-size: 28px; }
-          .breadcrumb { padding: 24px 48px 8px; }
-          .reviews__header, .reviews__star-row { padding: 0 48px; }
-          .reviews-grid { grid-template-columns: 1fr 1fr; padding: 0 48px; }
-          .related__title { padding: 0 48px; }
-          .related__scroll { padding: 0 48px 8px; }
-          .related-card { flex: 0 0 200px; }
-        }
-        @media (min-width: 1024px) {
-          .pdp__layout { padding: 40px 80px 80px; gap: 0 64px; }
-          .breadcrumb { padding: 28px 80px 8px; }
-          .reviews__header, .reviews__star-row { padding: 0 80px; }
-          .reviews-grid { padding: 0 80px; }
-          .related__title { padding: 0 80px; }
-          .related__scroll { padding: 0 80px 8px; }
-        }
-      `}</style>
-
-      <div className="pdp">
-        <nav className="breadcrumb" aria-label="Breadcrumb">
-          <a href="#">Home</a><span>›</span>
-          <a href="#">Preserves</a><span>›</span>
-          <span aria-current="page">Saffron &amp; Walnut</span>
-        </nav>
-
-        {/* Mobile gallery (above layout grid) */}
-        <div className="pdp__mobile-only">
-          <MobileGallery images={PRODUCT.images} />
+      <div className="grid gap-0 px-4 pt-6 md:grid-cols-[55%_45%] md:gap-12 md:px-12 md:pb-16 lg:gap-16 lg:px-20 lg:pt-10">
+        <div>
+          <DesktopGallery images={PRODUCT.images} />
         </div>
 
-        <div className="pdp__layout">
-          {/* Gallery col */}
-          <div>
-            <DesktopGallery images={PRODUCT.images} />
+        <div className="pt-6 md:pt-0">
+          <div className="mb-2 flex items-start justify-between gap-3">
+            <h1 className="flex-1 font-display text-[26px] font-bold leading-tight text-foreground md:text-3xl">
+              {PRODUCT.name}
+            </h1>
+            <div className="hidden md:block"><WishlistButton /></div>
           </div>
 
-          {/* Info col */}
-          <div className="pdp__info">
-            <div className="pdp__top-row">
-              <h1 className="pdp__name">{PRODUCT.name}</h1>
-              <div className="wishlist-desktop"><WishlistButton /></div>
-            </div>
+          {PRODUCT.badge && (
+            <span className="mb-2.5 inline-block rounded-md bg-accent/15 px-2.5 py-1 font-mono-price text-[11px] font-medium uppercase tracking-wide text-accent-700">
+              {PRODUCT.badge}
+            </span>
+          )}
 
-            {PRODUCT.badge && (
-              <span className="badge" style={{ marginBottom: 10, display: "inline-block" }}>{PRODUCT.badge}</span>
+          <div className="mb-4 flex items-center gap-1.5">
+            <StarRating rating={PRODUCT.rating} />
+            <span className="text-[13px] text-muted-foreground">{PRODUCT.rating} ({PRODUCT.reviewCount} reviews)</span>
+          </div>
+
+          <div className="mb-4 flex flex-wrap items-baseline gap-2.5">
+            <span className="font-mono-price text-2xl font-medium text-brand md:text-[28px]">{fmt(PRODUCT.price)}</span>
+            {PRODUCT.originalPrice && (
+              <>
+                <span className="font-mono-price text-[15px] text-muted-foreground line-through">{fmt(PRODUCT.originalPrice)}</span>
+                <span className="rounded-md bg-red-50 px-2 py-0.5 font-mono-price text-xs text-red-800">
+                  {pct(PRODUCT.originalPrice, PRODUCT.price)}% off
+                </span>
+              </>
             )}
-
-            <div className="pdp__rating-row">
-              <StarRating rating={PRODUCT.rating} />
-              <span className="pdp__rating-count">{PRODUCT.rating} ({PRODUCT.reviewCount} reviews)</span>
-            </div>
-
-            <div className="pdp__price-block">
-              <span className="price-disc">{fmt(PRODUCT.price)}</span>
-              {PRODUCT.originalPrice && (
-                <>
-                  <span className="price-orig">{fmt(PRODUCT.originalPrice)}</span>
-                  <span className="price-save">{pct(PRODUCT.originalPrice, PRODUCT.price)}% off</span>
-                </>
-              )}
-            </div>
-
-            <p className="pdp__desc">{PRODUCT.shortDesc}</p>
-
-            <div className="pdp__tags">
-              {PRODUCT.tags.map((t) => <span key={t} className="tag">{t}</span>)}
-            </div>
-
-            <div className="pdp__actions-row">
-              <QuantityStepper qty={qty} setQty={setQty} />
-              <div className="wishlist-mobile"><WishlistButton /></div>
-            </div>
-
-            <AddToCartBtn qty={qty} variant="inline" />
-
-            <div className="divider" />
-
-            <Accordion title="Nutrition facts">
-              <table className="nutrition-table" aria-label="Nutrition information">
-                <tbody>
-                  {PRODUCT.nutrition.map((row) => (
-                    <tr key={row.label}><td>{row.label}</td><td>{row.value}</td></tr>
-                  ))}
-                </tbody>
-              </table>
-            </Accordion>
-            <Accordion title="Ingredients"><p>{PRODUCT.ingredients}</p></Accordion>
-            <Accordion title="Delivery & shelf life">
-              <p>Shipped cold-chain in 24–48 hours across India. Best before 12 months from production. Refrigerate after opening; consume within 6 weeks.</p>
-            </Accordion>
           </div>
+
+          <p className="mb-5 text-sm leading-relaxed text-muted-foreground">{PRODUCT.shortDesc}</p>
+
+          <div className="mb-6 flex flex-wrap gap-1.5">
+            {PRODUCT.tags.map((t) => (
+              <span key={t} className="rounded-full border border-border px-2.5 py-1 text-xs text-muted-foreground">{t}</span>
+            ))}
+          </div>
+
+          <div className="mb-6 flex items-center gap-3">
+            <QuantityStepper qty={qty} setQty={setQty} />
+            <div className="md:hidden"><WishlistButton /></div>
+          </div>
+
+          <AddToCartBtn variant="inline" />
+
+          <div className="my-6 h-px bg-border" />
+
+          <Accordion title="Nutrition facts">
+            <table className="w-full border-collapse" aria-label="Nutrition information">
+              <tbody>
+                {PRODUCT.nutrition.map((row) => (
+                  <tr key={row.label} className="border-t border-border">
+                    <td className="py-1.5 text-[13px]">{row.label}</td>
+                    <td className="py-1.5 text-right font-mono-price text-[13px] text-foreground">{row.value}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </Accordion>
+          <Accordion title="Ingredients"><p>{PRODUCT.ingredients}</p></Accordion>
+          <Accordion title="Delivery & shelf life">
+            <p>Shipped cold-chain in 24–48 hours across India. Best before 12 months from production. Refrigerate after opening; consume within 6 weeks.</p>
+          </Accordion>
         </div>
-
-        {/* Reviews */}
-        <section aria-labelledby="reviews-heading" style={{ marginTop: 48, marginBottom: 48 }}>
-          <div className="reviews__header">
-            <h2 className="reviews__title" id="reviews-heading">Reviews</h2>
-            <span className="reviews__avg">{PRODUCT.rating}</span>
-            <span className="reviews__count">/ 5 — {PRODUCT.reviewCount} ratings</span>
-          </div>
-          <div className="reviews__star-row"><StarRating rating={PRODUCT.rating} size={18} /></div>
-          <div className="reviews-grid">
-            {REVIEWS.map((r) => <ReviewCard key={r.id} review={r} />)}
-          </div>
-        </section>
-
-        {/* Related */}
-        <section aria-labelledby="related-heading" style={{ marginBottom: 32 }}>
-          <h2 className="related__title" id="related-heading">You may also like</h2>
-          <div className="related__scroll" role="list">
-            {RELATED.map((p) => <div key={p.id} role="listitem"><RelatedCard product={p} /></div>)}
-          </div>
-        </section>
       </div>
+
+      {/* Reviews */}
+      <section aria-labelledby="reviews-heading" className="mt-12 mb-12 px-4 md:px-12 lg:px-20">
+        <div className="mb-1 flex items-baseline gap-2.5">
+          <h2 className="font-display text-xl font-semibold" id="reviews-heading">Reviews</h2>
+          <span className="font-mono-price text-lg font-medium text-accent">{PRODUCT.rating}</span>
+          <span className="text-[13px] text-muted-foreground">/ 5 — {PRODUCT.reviewCount} ratings</span>
+        </div>
+        <div className="mb-5"><StarRating rating={PRODUCT.rating} size={18} /></div>
+        <div className="grid gap-4 md:grid-cols-2">
+          {REVIEWS.map((r) => <ReviewCard key={r.id} review={r} />)}
+        </div>
+      </section>
+
+      {/* Related */}
+      <section aria-labelledby="related-heading" className="mb-8">
+        <h2 className="mb-4 px-4 font-display text-xl font-semibold md:px-12 lg:px-20" id="related-heading">
+          You may also like
+        </h2>
+        <div className="flex gap-3 overflow-x-auto px-4 pb-2 [scrollbar-width:none] md:px-12 lg:px-20 [&::-webkit-scrollbar]:hidden" role="list">
+          {RELATED.map((p) => <div key={p.id} role="listitem"><RelatedCard product={p} /></div>)}
+        </div>
+      </section>
 
       {/* Sticky CTA — mobile only */}
-      <div className="pdp__sticky-cta" aria-label="Add to cart">
-        <AddToCartBtn qty={qty} variant="sticky" />
+      <div className="fixed inset-x-0 bottom-0 z-40 px-4 pb-6 pt-3 bg-gradient-to-t from-background via-background/90 to-transparent md:hidden">
+        <AddToCartBtn variant="sticky" />
       </div>
-    </>
+    </div>
   );
 }

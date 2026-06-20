@@ -1,7 +1,7 @@
 "use client";
 
 // ─────────────────────────────────────────────
-//  CraftNest — Custom Hooks
+//  Suresh Foods — Custom Hooks
 // ─────────────────────────────────────────────
 
 import { useState, useEffect, useCallback, useRef } from "react";
@@ -55,8 +55,7 @@ export function useRecentSearches() {
 }
 
 // ── 3. useFilterState ─────────────────────────
-const DEFAULT_PRICE_RANGE = { min: 0, max: 50000 };
-
+const DEFAULT_PRICE_RANGE = { min: 0, max: 10000 };
 export const DEFAULT_FILTERS: FilterState = {
   priceRange: DEFAULT_PRICE_RANGE,
   tags: [],
@@ -139,8 +138,11 @@ export function useProducts(
       try {
         if (reset) setIsLoading(true);
         else setIsLoadingMore(true);
+        // Clear any previous error up front — otherwise a single
+        // failed request used to leave the error banner on screen
+        // forever, even after a later request succeeded.
+        setError(null);
 
-        // Build Supabase query params — swap this with your actual Supabase client
         const params = new URLSearchParams({
           page: String(pageNum),
           limit: String(PAGE_SIZE),
@@ -154,7 +156,14 @@ export function useProducts(
         });
 
         const res = await fetch(`/api/products?${params}`);
-        if (!res.ok) throw new Error("Failed to fetch products");
+
+        if (!res.ok) {
+          const body = (await res.json().catch(() => null)) as
+            | { error?: string }
+            | null;
+          throw new Error(body?.error || "Failed to fetch products");
+        }
+
         const json: ProductsResponse = await res.json();
 
         setProducts((prev) => (reset ? json.data : [...prev, ...json.data]));

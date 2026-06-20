@@ -188,32 +188,34 @@ export function ProductCard({ product, onWishlistToggle }: ProductCardProps) {
       className="group relative flex flex-col bg-white rounded-2xl overflow-hidden shadow-[0_1px_4px_rgba(0,0,0,0.06)] hover:shadow-[0_4px_16px_rgba(0,0,0,0.10)] transition-shadow duration-300"
     >
       {/* Image container */}
-      <div className="relative aspect-square bg-[#F3EFE9] overflow-hidden">
-        {!imgError ? (
-          <Image
-            src={product.images[0]}
-            alt={product.name}
-            fill
-            sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
-            onError={() => setImgError(true)}
-          />
-        ) : (
-          // Fallback placeholder
-          <div className="w-full h-full flex items-center justify-center">
-            <svg
-              className="w-12 h-12 text-[#D9D3C7]"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth={1}
-            >
-              <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
-              <circle cx="8.5" cy="8.5" r="1.5" />
-              <polyline points="21 15 16 10 5 21" />
-            </svg>
-          </div>
-        )}
+      {/* Image container */}
+<div className="relative aspect-square bg-[#F3EFE9] overflow-hidden">
+  {!imgError && product.images?.[0] ? (
+    <Image
+      src={product.images[0]}
+      alt={product.name}
+      fill
+      sizes="(max-width: 767px) 50vw, (max-width: 1023px) 33vw, 25vw"
+      className="object-cover transition-transform duration-500 group-hover:scale-105"
+      onError={() => setImgError(true)}
+    />
+  ) : (
+    // Fallback placeholder — now also covers "no image yet"
+    <div className="w-full h-full flex items-center justify-center">
+      <svg
+        className="w-12 h-12 text-[#D9D3C7]"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth={1}
+      >
+        <rect x="3" y="3" width="18" height="18" rx="2" ry="2" />
+        <circle cx="8.5" cy="8.5" r="1.5" />
+        <polyline points="21 15 16 10 5 21" />
+      </svg>
+    </div>
+  )}
+  ...
 
         {/* Badge */}
         {displayBadge && (

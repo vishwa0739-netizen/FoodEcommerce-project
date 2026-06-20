@@ -10,7 +10,6 @@ import { AddressStep }   from '@/components/checkout/AddressStep'
 import { PaymentStep }   from '@/components/checkout/PaymentStep'
 import { ReviewStep }    from '@/components/checkout/ReviewStep'
 
-// ── Demo data — replace with useCart() once backend is wired ─────────────────
 const DEMO_ITEMS: CartItem[] = [
   {
     id: 'ci1', productId: 'p1',
@@ -30,7 +29,6 @@ const DEMO_ITEMS: CartItem[] = [
 const DEMO_SUMMARY: CartSummary = {
   subtotal: 1297, discount: 101, deliveryFee: 0, total: 1196, itemCount: 3,
 }
-// ─────────────────────────────────────────────────────────────────────────────
 
 function formatPrice(n: number) {
   return new Intl.NumberFormat('en-IN', {
@@ -40,7 +38,7 @@ function formatPrice(n: number) {
 
 function OrderSummary({ items, summary }: { items: CartItem[]; summary: CartSummary }) {
   return (
-    <aside className="hidden lg:block lg:sticky lg:top-8 self-start">
+    <aside className="hidden desktop:block desktop:sticky desktop:top-8 self-start">
       <div className="rounded-3xl border border-[#bf8952]/25 bg-white overflow-hidden">
         <div className="px-6 py-4 border-b border-[#bf8952]/15">
           <h2 className="font-display text-lg font-semibold text-[#1a0a0d]">Order Summary</h2>
@@ -100,7 +98,6 @@ export default function CheckoutPage() {
   const [payment, setPayment]       = useState<Partial<PaymentDetails>>({})
   const [isProcessing, setIsProcessing] = useState(false)
 
-  // Replace these two lines with useCart() once backend is connected:
   const items   = DEMO_ITEMS
   const summary = DEMO_SUMMARY
 
@@ -118,14 +115,6 @@ export default function CheckoutPage() {
     setIsProcessing(true)
     try {
       // ── WIRE UP HERE (Claude backend Prompt 3.8) ──────────────────────
-      // const res = await fetch('/api/checkout', {
-      //   method: 'POST',
-      //   headers: { 'Content-Type': 'application/json' },
-      //   body: JSON.stringify({ address, payment }),
-      // })
-      // const { razorpayOrderId, amount, key } = await res.json()
-      // Open Razorpay SDK here, then on success:
-      // router.push(`/order-confirmation?id=${orderId}`)
       await new Promise(r => setTimeout(r, 2000)) // remove this line when wiring
     } catch (err) {
       console.error(err)
@@ -142,9 +131,8 @@ export default function CheckoutPage() {
 
   return (
     <div className="min-h-screen bg-[#FCFCF7]">
-      {/* Minimal header */}
       <header className="sticky top-0 z-30 bg-[#FCFCF7]/90 backdrop-blur-md border-b border-[#bf8952]/20">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-4
+        <div className="max-w-6xl mx-auto px-4 sm:px-6 desktop:px-8 py-4
                         flex items-center justify-between">
           <Link href="/shop"
             className="flex items-center gap-2 text-[#691626]/60 hover:text-[#691626] transition-colors">
@@ -161,14 +149,13 @@ export default function CheckoutPage() {
         </div>
       </header>
 
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 lg:py-12">
-        {/* Step indicator */}
-        <div className="mb-8 max-w-md mx-auto lg:max-w-none lg:mb-12">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 desktop:px-8 py-8 desktop:py-12">
+        <div className="mb-8 max-w-md mx-auto desktop:max-w-none desktop:mb-12">
           <StepIndicator currentStep={step} />
         </div>
 
-        {/* Mobile: single col | Desktop: 2-col with sticky summary */}
-        <div className="lg:grid lg:grid-cols-[1fr_400px] lg:gap-12 xl:gap-16">
+        {/* Mobile + Tablet: single col | Desktop (1440px+): 2-col with sticky summary */}
+        <div className="desktop:grid desktop:grid-cols-[1fr_400px] desktop:gap-16">
           <div>
             <h1 className="font-display text-2xl sm:text-3xl font-semibold text-[#1a0a0d] mb-6">
               {STEP_TITLE[step]}
@@ -195,8 +182,8 @@ export default function CheckoutPage() {
           <OrderSummary items={items} summary={summary} />
         </div>
 
-        {/* Mobile inline summary */}
-        <div className="lg:hidden mt-8 rounded-2xl border border-[#bf8952]/25 bg-white overflow-hidden">
+        {/* Mobile + Tablet inline summary (hidden once desktop 2-col kicks in) */}
+        <div className="desktop:hidden mt-8 rounded-2xl border border-[#bf8952]/25 bg-white overflow-hidden">
           <div className="px-4 py-3 border-b border-[#bf8952]/15">
             <h3 className="font-body text-xs font-bold text-[#1a0a0d]/50 uppercase tracking-widest">
               Order Summary ({summary.itemCount} items)

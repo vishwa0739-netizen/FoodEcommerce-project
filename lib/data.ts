@@ -26,12 +26,12 @@ export interface Testimonial {
 }
 
 export const categories: Category[] = [
-  { id: 'oils', name: 'Oils & Vinegars', href: '/categories/oils', image: '/images/cat-oils.png' },
-  { id: 'honey', name: 'Honey & Preserves', href: '/categories/honey', image: '/images/cat-honey.png' },
-  { id: 'chocolate', name: 'Chocolate', href: '/categories/chocolate', image: '/images/cat-chocolate.png' },
-  { id: 'spices', name: 'Spices & Blends', href: '/categories/spices', image: '/images/cat-spices.png' },
-  { id: 'coffee', name: 'Coffee', href: '/categories/coffee', image: '/images/cat-coffee.png' },
-  { id: 'tea', name: 'Loose Leaf Tea', href: '/categories/tea', image: '/images/cat-tea.png' },
+  { id: 'oils', name: 'Oils & Vinegars', href: '/shop?category=oils', image: '/images/cat-oils.png' },
+  { id: 'honey', name: 'Honey & Preserves', href: '/shop?category=honey', image: '/images/cat-honey.png' },
+  { id: 'chocolate', name: 'Chocolate', href: '/shop?category=chocolate', image: '/images/cat-chocolate.png' },
+  { id: 'spices', name: 'Spices & Blends', href: '/shop?category=spices', image: '/images/cat-spices.png' },
+  { id: 'coffee', name: 'Coffee', href: '/shop?category=coffee', image: '/images/cat-coffee.png' },
+  { id: 'tea', name: 'Loose Leaf Tea', href: '/shop?category=tea', image: '/images/cat-tea.png' },
 ]
 
 export const featuredProducts: Product[] = [

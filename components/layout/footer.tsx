@@ -57,7 +57,7 @@ function XIcon({ className }: IconProps) {
 }
 
 const socials = [
-  { label: 'Instagram', href: 'https://instagram.com', icon: InstagramIcon },
+  { label: 'Instagram', href: 'https://www.instagram.com/web.exx/', icon: InstagramIcon },
   { label: 'Facebook', href: 'https://facebook.com', icon: FacebookIcon },
   { label: 'X (Twitter)', href: 'https://x.com', icon: XIcon },
 ]
@@ -71,7 +71,7 @@ export function Footer() {
           {/* Brand */}
           <div className="md:pr-6">
             <span className="font-display text-2xl font-semibold text-background">
-              Maitri <span className="text-accent">&amp; Co.</span>
+              Suresh <span className="text-accent"> Foods.</span>
             </span>
             <p className="mt-4 text-sm leading-relaxed text-background/70">
               Premium artisan food and gourmet provisions — sourced from named
@@ -122,7 +122,7 @@ export function Footer() {
         {/* Legal */}
         <div className="mt-12 border-t border-background/10 pt-6">
           <p className="text-xs text-background/60">
-            © {new Date().getFullYear()} Maitri &amp; Co. All rights reserved.
+            © {new Date().getFullYear()} Suresh Foods. All rights reserved.
           </p>
           <div className="mt-3 flex flex-wrap items-center gap-x-6 gap-y-2 text-xs">
             <Link

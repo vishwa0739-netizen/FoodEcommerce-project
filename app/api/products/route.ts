@@ -8,7 +8,7 @@
 
 import { NextRequest, NextResponse } from "next/server";
 import { createClient } from "@supabase/supabase-js";
-import type { ProductsResponse } from "@/app/(shop)/types";
+import type { ProductsResponse } from "@/app/(site)/(shop)/types";
 import { queryFallbackProducts } from "@/lib/fallback-products";
 
 export async function GET(req: NextRequest) {

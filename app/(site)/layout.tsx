@@ -6,7 +6,7 @@ import { Footer } from '@/components/layout/footer'
 import { BottomTabBar } from '@/components/layout/bottom-tab-bar'
 import { CartProvider } from '@/components/cart/CartContext'
 import { CartDrawer } from '@/components/cart/CartDrawer'
-import './globals.css'
+import '../globals.css'
 
 const fraunces = Fraunces({
   variable: '--font-fraunces',

@@ -9,7 +9,7 @@
 
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import ProductListingPage from "@/app/(shop)/components/ProductListingPage";
+import ProductListingPage from "@/app/(site)/(shop)/components/ProductListingPage";
 import { CATEGORY_REGISTRY } from "@/lib/categories";
 
 export const metadata: Metadata = {

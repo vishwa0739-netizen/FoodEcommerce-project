@@ -7,7 +7,7 @@
 //  the "Failed to fetch products" / empty-grid combo.
 // ─────────────────────────────────────────────
 
-import type { Product, ProductsResponse } from "@/app/(shop)/types";
+import type { Product, ProductsResponse } from "@/app/(site)/(shop)/types";
 
 export const FALLBACK_PRODUCTS: Product[] = [
   {

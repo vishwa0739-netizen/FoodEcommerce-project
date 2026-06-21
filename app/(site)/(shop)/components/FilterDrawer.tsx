@@ -8,7 +8,6 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { DietaryTag, FilterState, SortOption } from "../types";
-import { DEFAULT_FILTERS } from "../hooks";
 
 // ── Constants ─────────────────────────────────
 export const SORT_OPTIONS: SortOption[] = [

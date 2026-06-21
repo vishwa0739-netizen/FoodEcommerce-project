@@ -10,7 +10,7 @@
 //  plain lib file fixes that for good.
 // ─────────────────────────────────────────────
 
-import type { CategoryMeta } from "@/app/(shop)/types";
+import type { CategoryMeta } from "@/app/(site)/(shop)/types";
 
 export const CATEGORY_REGISTRY: Record<string, CategoryMeta> = {
   all: {
